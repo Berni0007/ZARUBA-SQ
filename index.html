@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ZARUBA — ZBA</title>
+  <meta name="description" content="ZARUBA — элитные военные серверы ZBA." />
+  <meta name="theme-color" content="#3a4a3f" />
+  <link rel="icon" href="favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            military: '#3a4a3f',
+            'military-light': '#5b6c5f',
+            'military-dark': '#2b362f',
+            gold: '#FFD700'
+          },
+          fontFamily: {
+            tactical: ['Anton', 'Impact', 'Arial Black', 'system-ui', 'sans-serif'],
+            stencil: ['"Stardos Stencil"', 'Arial Black', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: url('background.jpeg') center/cover no-repeat;
+      z-index: -2;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: -1;
+    }
+    .gold-gradient {
+      background: linear-gradient(90deg, #FFD700, #B8860B, #FFD700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size: 200% auto;
+      animation: shine 5s linear infinite;
+    }
+    @keyframes shine { to { background-position: 200% center; } }
+
+    .text-btn {
+      display: inline-block;
+      position: relative;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #FFD700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.3s, transform 0.2s;
+    }
+    .text-btn::after {
+      content: "";
+      position: absolute;
+      left: 0; bottom: -4px;
+      width: 100%; height: 2px;
+      background: #FFD700;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+      transform-origin: right;
+    }
+    .text-btn:hover { color: #fff8d5; transform: scale(1.05); }
+    .text-btn:hover::after { transform: scaleX(1); transform-origin: left; }
+  </style>
+</head>
+<body class="min-h-screen overflow-x-hidden text-neutral-100">
+  <div class="container mx-auto px-4 py-8 relative">
+    <header class="text-center mb-12" role="banner">
+      <img src="logo.png" alt="ZARUBA Logo" class="mx-auto w-40 md:w-56 drop-shadow-lg mb-4" />
+      <h1 class="text-6xl md:text-8xl font-tactical gold-gradient tracking-wider mb-2 select-none">ZARUBA</h1>
+      <p class="text-2xl text-neutral-200 font-stencil tracking-widest">ZBA</p>
+    </header>
+
+    <main class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+        <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 1</h2>
+        <p class="text-neutral-200 mb-6 text-lg">Global Escalation</p>
+        <a href="steam://joinlobby/393380/109775241439620562/76561197996985261" class="text-btn">Присоединиться</a>
+      </section>
+
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+        <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 2</h2>
+        <p class="text-neutral-200 mb-6 text-lg">Steel Division</p>
+        <a href="steam://joinlobby/393380/109775241442086437/76561198125554764" class="text-btn">Присоединиться</a>
+      </section>
+
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+        <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 3</h2>
+        <p class="text-neutral-200 mb-6 text-lg">Global Escalation</p>
+        <a href="steam://joinlobby/393380/109775241408767088/76561198002409744" class="text-btn">Присоединиться</a>
+      </section>
+
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+        <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 4</h2>
+        <p class="text-neutral-200 mb-6 text-lg">Global Escalation</p>
+        <a href="steam://joinlobby/393380/109775241438105079/76561198004899938" class="text-btn">Присоединиться</a>
+      </section>
+    </main>
+
+    <footer class="text-center mt-16 pb-8" role="contentinfo">
+      <div class="border-t border-gold/30 pt-8">
+        <p class="text-neutral-200/80 text-sm uppercase tracking-widest">by Berni © 2024</p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
