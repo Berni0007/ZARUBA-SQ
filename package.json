@@ -1,0 +1,15 @@
+{
+  "name": "zaruba-sq",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static site with cron-updated BattleMetrics players cache.",
+  "scripts": {
+    "update:players": "node scripts\\fetch-players.mjs",
+    "update:links": "node scripts\\fetch-links.mjs",
+    "start:links": "node scripts\\fetch-links.mjs --watch"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

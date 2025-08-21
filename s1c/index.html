@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Перенаправление на ZARUBA 1</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0b0f0d; color:#e5e5e5; }
+    .wrap { min-height: 100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; }
+    .card { max-width:640px; width:100%; background:#1b2320; border:1px solid #FFD70055; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    .title { font-size:24px; margin:0 0 8px; color:#FFD700; }
+    .muted { color:#c9c9c9; margin:0 0 16px; }
+    .link { display:inline-block; margin-top:12px; color:#FFD700; text-decoration:underline; word-break:break-all; }
+    .small { font-size:12px; color:#a5a5a5; margin-top:12px; }
+    .spinner { width:20px; height:20px; border:3px solid #FFD70055; border-top-color:#FFD700; border-radius:50%; animation:spin 1s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    button { background:#2b362f; border:1px solid #FFD70066; color:#FFD700; padding:8px 14px; border-radius:8px; cursor:pointer; }
+    button:hover { filter:brightness(1.1); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 class="title">Заходим на первый сервер</h1>
+      <p class="muted"><span class="spinner" aria-hidden="true"></span><span id="status">Ищем актуальную ссылку для подключения...</span></p>
+      <p><a id="direct" class="link" href="#" style="display:none">Открыть в Squad</a></p>
+      <p class="small">Если перенаправление не сработало автоматически, нажмите «Открыть в Squad».</p>
+      <p class="small"><button id="retry" type="button" style="display:none">Повторить попытку</button></p>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const statusEl = document.getElementById('status');
+      const a = document.getElementById('direct');
+      const retryBtn = document.getElementById('retry');
+
+      const isValidLink = (s) => typeof s === 'string' && s.startsWith('steam://joinlobby/');
+
+      async function fetchFirstLink(){
+        const url = '../links.txt?ts=' + Date.now();
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const text = await res.text();
+          const lines = text.split(/\r?\n/).map(s => s.trim());
+          // Take exactly the first line (server 1). If empty or invalid, return empty.
+          const first = (lines[0] || '').trim();
+          return isValidLink(first) ? first : '';
+        } catch (e) {
+          console.warn('[S1C] Не удалось загрузить links.txt:', e);
+          return '';
+        }
+      }
+
+      let attempts = 0;
+      const maxAttempts = 10; // ~10 секунд ожидания
+
+      async function attempt(){
+        attempts++;
+        statusEl.textContent = 'Ищем актуальную ссылку для подключения... (попытка ' + attempts + '/' + maxAttempts + ')';
+        const link = await fetchFirstLink();
+        if (link) {
+          a.href = link;
+          a.style.display = 'inline-block';
+          statusEl.textContent = 'Найдена ссылка. Открываем Squad...';
+          try {
+            // Use replace to avoid adding to history
+            window.location.replace(link);
+          } catch(_) {
+            // Fallback to direct click
+            statusEl.textContent = 'Нажмите «Открыть в Squad», чтобы продолжить.';
+          }
+          return true;
+        }
+        if (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1000));
+          return attempt();
+        } else {
+          statusEl.textContent = 'Не удалось получить ссылку. Попробуйте снова.';
+          retryBtn.style.display = 'inline-block';
+          return false;
+        }
+      }
+
+      retryBtn.addEventListener('click', () => {
+        attempts = 0;
+        retryBtn.style.display = 'none';
+        a.style.display = 'none';
+        attempt();
+      });
+
+      // Kick off
+      attempt();
+    })();
+  </script>
+</body>
+</html>
