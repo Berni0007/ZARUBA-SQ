@@ -9,6 +9,9 @@ const ROOT = path.resolve(__dirname, '..');
 const APP_ID = '393380'; // Squad
 const BM_TOKEN = process.env.BM_TOKEN || process.env.BATTLEMETRICS_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6ImM0Y2VhNDQ2MTMxMDIyMzAiLCJpYXQiOjE3NTU3MzU2NTAsIm5iZiI6MTc1NTczNTY1MCwiaXNzIjoiaHR0cHM6Ly93d3cuYmF0dGxlbWV0cmljcy5jb20iLCJzdWIiOiJ1cm46dXNlcjoxMDU0OTAxIn0.xQKibQ5UmFRKEJ5Y9wX31D48Sa47k70w_NeTfcVimWs';
 const STEAM_API_KEY = process.env.STEAM_API_KEY || process.env.STEAM_KEY || '7B1DCE29B0B4A39D3A5817F8204EB89B';
+const _ENV_SAMPLE = Number(process.env.LOBBY_SAMPLE_SIZE || process.env.LINKS_SAMPLE_SIZE);
+const LOBBY_SAMPLE_SIZE = Number.isFinite(_ENV_SAMPLE) ? Math.max(1, Math.min(100, _ENV_SAMPLE)) : 20;
+console.log('[LINKS-CRON] LOBBY_SAMPLE_SIZE =', LOBBY_SAMPLE_SIZE);
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
@@ -104,16 +107,36 @@ async function getPlayerSummaries(steamIds) {
   return players;
 }
 
-function findFirstPublicWithLobby(orderedSteamIds, players) {
+function chooseBestLobbyLink(orderedSteamIds, players, maxProfiles = LOBBY_SAMPLE_SIZE) {
   const byId = new Map(players.map(p => [String(p.steamid), p]));
+  const candidates = [];
   for (const id of orderedSteamIds) {
     const p = byId.get(String(id));
     if (!p) continue;
     if (Number(p.communityvisibilitystate) === 3 && p.lobbysteamid) {
-      return { steamid: String(p.steamid), lobbysteamid: String(p.lobbysteamid) };
+      const steamid = String(p.steamid);
+      const lobby = String(p.lobbysteamid);
+      const link = `steam://joinlobby/${APP_ID}/${lobby}/${steamid}`;
+      candidates.push({ steamid, lobby, link });
+      if (candidates.length >= maxProfiles) break;
     }
   }
-  return null;
+  if (!candidates.length) return null;
+  // Count frequency of lobbies among candidates
+  const freq = new Map();
+  for (const c of candidates) {
+    freq.set(c.lobby, (freq.get(c.lobby) || 0) + 1);
+  }
+  let best = candidates[0];
+  let bestCount = freq.get(best.lobby) || 1;
+  for (const c of candidates) {
+    const cnt = freq.get(c.lobby) || 1;
+    if (cnt > bestCount) {
+      best = c;
+      bestCount = cnt;
+    }
+  }
+  return best; // { steamid, lobby, link }
 }
 
 async function buildLinkForServer(serverId) {
@@ -121,10 +144,10 @@ async function buildLinkForServer(serverId) {
     const steamIds = await fetchBMPlayersSteamIds(serverId);
     if (!steamIds.length) return '';
     const players = await getPlayerSummaries(steamIds);
-    const found = findFirstPublicWithLobby(steamIds, players);
-    if (found && found.lobbysteamid && found.steamid) {
-      const link = `steam://joinlobby/${APP_ID}/${found.lobbysteamid}/${found.steamid}`;
-      console.log('[LINKS-CRON] Link for', serverId, '=>', link);
+    const best = chooseBestLobbyLink(steamIds, players, LOBBY_SAMPLE_SIZE);
+    if (best && best.lobby && best.steamid) {
+      const link = best.link;
+      console.log('[LINKS-CRON] Link for', serverId, '=>', link, `(matches for lobby ${best.lobby})`);
       return link;
     }
     console.log('[LINKS-CRON] Не найден публичный профиль с lobbysteamid для сервера', serverId);

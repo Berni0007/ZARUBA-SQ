@@ -1,0 +1,9 @@
+# Environment secrets
+.env
+
+# Runtime-generated data (updated by scripts)
+links.txt
+players.json
+
+# NPM lockfile (do not commit if you prefer reproducible-free installs or CI regen)
+package-lock.json

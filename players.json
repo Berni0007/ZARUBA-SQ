@@ -1,21 +1,37 @@
 {
-  "updatedAt": "2025-08-21T23:48:34.647Z",
+  "updatedAt": "2025-08-26T08:44:57.423Z",
   "results": [
     {
       "idx": 0,
-      "value": 75
+      "value": 12,
+      "players": 12,
+      "queue": 0,
+      "map": "GE_Narva_Seed_v1_VDV_UAFI",
+      "playTimeSec": 770
     },
     {
       "idx": 1,
-      "value": 59
+      "value": 100,
+      "players": 100,
+      "queue": 33,
+      "map": "SD_Manicouagan_Invasion_v3",
+      "playTimeSec": 3489
     },
     {
       "idx": 2,
-      "value": 90
+      "value": 99,
+      "players": 99,
+      "queue": 13,
+      "map": "GE_Manicouagan_Invasion_v1_AFU-VDV",
+      "playTimeSec": 415
     },
     {
       "idx": 3,
-      "value": 100
+      "value": 100,
+      "players": 100,
+      "queue": 16,
+      "map": "GE_Manicouagan_Invasion_v2_UAFI-WAGPMC",
+      "playTimeSec": 3820
     }
   ]
 }

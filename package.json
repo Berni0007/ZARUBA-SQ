@@ -7,9 +7,14 @@
   "scripts": {
     "update:players": "node scripts\\fetch-players.mjs",
     "update:links": "node scripts\\fetch-links.mjs",
-    "start:links": "node scripts\\fetch-links.mjs --watch"
+    "start:links": "node scripts\\fetch-links.mjs --watch",
+    "start:bot": "node scripts\\discord-bot.mjs"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.1"
   }
 }

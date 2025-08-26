@@ -33,7 +33,7 @@ async function readBMIds() {
   return sliced;
 }
 
-async function fetchCount(id) {
+async function fetchData(id) {
   if (!id) return null;
   const url = 'https://api.battlemetrics.com/servers/' + encodeURIComponent(id);
   const headers = { 'Accept': 'application/json' };
@@ -42,9 +42,13 @@ async function fetchCount(id) {
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const json = await res.json();
-  const val = json?.data?.attributes?.players;
-  const value = clamp(val, 0, MAX_PLAYERS);
-  return value;
+  const attrs = json?.data?.attributes || {};
+  const details = attrs?.details || {};
+  const players = clamp(attrs?.players, 0, MAX_PLAYERS);
+  const queue = clamp(details?.squad_publicQueue, 0, MAX_PLAYERS);
+  const map = typeof details?.map === 'string' && details.map.trim() ? details.map.trim() : null;
+  const playTimeSec = Number.isFinite(Number(details?.squad_playTime)) ? Number(details.squad_playTime) : null;
+  return { players, queue, map, playTimeSec };
 }
 
 async function main() {
@@ -53,12 +57,13 @@ async function main() {
   for (let idx = 0; idx < ids.length; idx++) {
     const id = ids[idx];
     try {
-      const value = await fetchCount(id);
-      console.log('[BM-CRON] Result for', id || '(empty)', '=>', value);
-      results.push({ idx, value });
+      const data = await fetchData(id);
+      const value = data ? data.players : null; // backward compat for older UI
+      console.log('[BM-CRON] Result for', id || '(empty)', '=>', data);
+      results.push({ idx, value, ...data });
     } catch (e) {
       console.warn('[BM-CRON] Ошибка для', id, e.message);
-      results.push({ idx, value: null });
+      results.push({ idx, value: null, players: null, queue: null, map: null, playTimeSec: null });
     }
   }
   const payload = { updatedAt: new Date().toISOString(), results };

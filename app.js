@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('pc-4')
   ];
 
+  // Tracks whether each server currently has a valid join link (from links.txt)
+  let linkAvailable = [false, false, false, false];
+
   const defaultText = 'Присоединиться';
   const MAX_PLAYERS = 100;
   const BM_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6ImM0Y2VhNDQ2MTMxMDIyMzAiLCJpYXQiOjE3NTU3MzU2NTAsIm5iZiI6MTc1NTczNTY1MCwiaXNzIjoiaHR0cHM6Ly93d3cuYmF0dGxlbWV0cmljcy5jb20iLCJzdWIiOiJ1cm46dXNlcjoxMDU0OTAxIn0.xQKibQ5UmFRKEJ5Y9wX31D48Sa47k70w_NeTfcVimWs';
@@ -29,23 +32,33 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!btn) return;
     if (disabled) {
       btn.classList.add('opacity-50', 'pointer-events-none');
+      btn.setAttribute('aria-disabled', 'true');
+      btn.removeAttribute('href');
       btn.textContent = 'Недоступно';
     } else {
       btn.classList.remove('opacity-50', 'pointer-events-none');
+      btn.removeAttribute('aria-disabled');
       btn.textContent = defaultText;
     }
   }
 
   function applyLinks(links) {
+    const BASE = 'http://212.22.93.230:8080';
     for (let i = 0; i < buttons.length; i++) {
       const btn = buttons[i];
       const link = (links[i] || '').trim();
-      if (typeof link === 'string' && link.startsWith('steam://joinlobby/')) {
-        btn.setAttribute('href', link);
+      const ok = typeof link === 'string' && link.startsWith('steam://joinlobby/');
+      linkAvailable[i] = !!ok;
+      if (ok) {
+        btn.setAttribute('href', `${BASE}/s${i + 1}c/`);
         setDisabled(btn, false);
       } else {
         setDisabled(btn, true);
       }
+    }
+    // Immediately refresh chart colors if we already have player data
+    if (lastResults) {
+      updateServerCards(lastResults);
     }
   }
 
@@ -115,6 +128,184 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  // ===== NEW: Chart + Info rendering =====
+  let playersChart = null;
+  let serverCharts = [null, null, null, null];
+  let lastResults = null;
+
+  function formatPlayTime(sec) {
+    const s = Number(sec);
+    if (!Number.isFinite(s) || s < 0) return '—:—';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const mm = String(m).padStart(2, '0');
+    return h + ':' + mm;
+  }
+
+  function updateChartWith(results) {
+    try {
+      if (!(window && window.Chart)) {
+        console.warn('[BM-DEBUG] Chart.js не загружен');
+        return;
+      }
+      const labels = ['ZARUBA 1', 'ZARUBA 2', 'ZARUBA 3', 'ZARUBA 4'];
+      const players = [];
+      const queue = [];
+      for (let i = 0; i < 4; i++) {
+        const entry = results.find(r => Number(r?.idx) === i) || {};
+        const p = Number(entry?.players ?? entry?.value);
+        const q = Number(entry?.queue);
+        players.push(Number.isFinite(p) ? p : 0);
+        queue.push(Number.isFinite(q) ? q : 0);
+      }
+      const ctx = document.getElementById('playersChart');
+      if (!ctx) return;
+      const data = {
+        labels,
+        datasets: [
+          {
+            label: 'Игроки',
+            data: players,
+            backgroundColor: 'rgba(255, 215, 0, 0.6)',
+            borderColor: 'rgba(255, 215, 0, 1)',
+            borderWidth: 1,
+          },
+          {
+            label: 'Очередь',
+            data: queue,
+            backgroundColor: 'rgba(91, 108, 95, 0.6)',
+            borderColor: 'rgba(91, 108, 95, 1)',
+            borderWidth: 1,
+          }
+        ]
+      };
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: MAX_PLAYERS,
+            grid: { color: 'rgba(255,255,255,0.1)' },
+            ticks: { color: '#e5e5e5' }
+          },
+          x: {
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#e5e5e5' }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: '#e5e5e5' } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw}` } }
+        }
+      };
+      if (playersChart) {
+        playersChart.data = data;
+        playersChart.options = options;
+        playersChart.update();
+      } else {
+        playersChart = new Chart(ctx, { type: 'bar', data, options });
+      }
+    } catch (e) {
+      console.warn('[BM-DEBUG] Не удалось обновить диаграмму:', e);
+    }
+  }
+
+  function updateServerInfo(results) {
+    const box = document.getElementById('serverInfo');
+    if (!box) return;
+    const items = [];
+    for (let i = 0; i < 4; i++) {
+      const r = results.find(x => Number(x?.idx) === i) || {};
+      const map = (r && typeof r.map === 'string' && r.map.trim()) ? r.map.trim() : '—';
+      const time = formatPlayTime(r?.playTimeSec);
+      const players = Number.isFinite(Number(r?.players ?? r?.value)) ? Number(r?.players ?? r?.value) : null;
+      const queue = Number.isFinite(Number(r?.queue)) ? Number(r?.queue) : null;
+      const line1 = `ZARUBA ${i + 1}`;
+      const line2 = `Карта: ${map}`;
+      const line3 = `Время: ${time}`;
+      const line4 = `Онлайн: ${players != null ? players : '—'}/${MAX_PLAYERS} · Очередь: ${queue != null ? queue : '—'}`;
+      items.push(
+        `<div class=\"rounded-lg border border-gold/40 bg-military-dark/50 p-4\">
+          <div class=\"text-lg font-semibold text-gold mb-1\">${line1}</div>
+          <div class=\"text-neutral-200\">${line2}</div>
+          <div class=\"text-neutral-200\">${line3}</div>
+          <div class=\"text-neutral-300 text-sm mt-1\">${line4}</div>
+        </div>`
+      );
+    }
+    box.innerHTML = items.join('');
+  }
+
+  // New: Render per-card doughnut charts and info
+  function updateServerCards(results) {
+    try {
+      if (!(window && window.Chart)) {
+        console.warn('[BM-DEBUG] Chart.js не загружен');
+        return;
+      }
+      for (let i = 0; i < 4; i++) {
+        const r = results.find(x => Number(x?.idx) === i) || {};
+        const p = Number(r?.players ?? r?.value);
+        const q = Number(r?.queue);
+        const players = Number.isFinite(p) ? clamp(p, 0, MAX_PLAYERS) : 0;
+        const queue = Number.isFinite(q) ? clamp(q, 0, MAX_PLAYERS) : 0;
+        const free = Math.max(0, MAX_PLAYERS - players);
+
+        const canvas = document.getElementById('chart-' + (i + 1));
+        if (canvas) {
+          const data = {
+            labels: ['Игроки', 'Очередь', 'Свободно'],
+            datasets: [{
+              data: [players, queue, free],
+              backgroundColor: [
+                'rgba(255, 215, 0, 0.85)', // gold for players
+                'rgba(239, 68, 68, 0.85)', // red for queue
+                (linkAvailable[i] ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.85)') // green if can join, red if no link
+              ],
+              borderWidth: 0,
+            }]
+          };
+          const options = {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '70%',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.label}: ${ctx.raw}`
+                }
+              }
+            }
+          };
+          if (serverCharts[i]) {
+            serverCharts[i].data = data;
+            serverCharts[i].options = options;
+            serverCharts[i].update();
+          } else {
+            serverCharts[i] = new Chart(canvas, { type: 'doughnut', data, options });
+          }
+        }
+
+        const info = document.getElementById('info-' + (i + 1));
+        if (info) {
+          const map = (r && typeof r.map === 'string' && r.map.trim()) ? r.map.trim() : '—';
+          const time = formatPlayTime(r?.playTimeSec);
+          const onlineText = (Number.isFinite(p) ? players : '—') + '/' + MAX_PLAYERS;
+          const queueText = Number.isFinite(q) ? queue : '—';
+          info.innerHTML = `
+            <div class="mb-1"><span class="text-gold">Карта:</span> ${map}</div>
+            <div class="mb-1"><span class="text-gold">Время:</span> ${time}</div>
+            <div class="text-neutral-300 text-sm">Онлайн: ${onlineText} · Очередь: ${queueText}</div>
+          `;
+        }
+      }
+    } catch (e) {
+      console.warn('[BM-DEBUG] Не удалось обновить карточки серверов:', e);
+    }
+  }
+
   async function fetchPlayerCounts() {
     try {
       const url = 'players.json?ts=' + Date.now();
@@ -125,15 +316,21 @@ document.addEventListener('DOMContentLoaded', function () {
       const json = await res.json();
       console.log('[BM-DEBUG] players.json JSON:', json);
       const results = Array.isArray(json?.results) ? json.results : [];
+      lastResults = results;
+      // Обновляем бейджи
       for (let i = 0; i < counters.length; i++) {
-        const entry = results.find(r => Number(r?.idx) === i);
+        const entry = results.find(r => Number(r?.idx) === i) || null;
         const value = entry && Number.isFinite(Number(entry.value)) ? Number(entry.value) : null;
         console.log('[BM-DEBUG] Applying counter', i + 1, 'value:', (Number.isFinite(value) ? value : '—') + '/' + MAX_PLAYERS);
         setCounter(i, value);
       }
+      // Обновляем круговые диаграммы и инфо в карточках
+      updateServerCards(results);
+      return results;
     } catch (e) {
       console.error('Не удалось загрузить players.json:', e);
       // При ошибке оставляем текущие значения
+      return [];
     }
   }
 
