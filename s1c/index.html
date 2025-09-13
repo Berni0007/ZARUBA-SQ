@@ -6,9 +6,13 @@
   <title>Перенаправление на ZARUBA 1</title>
   <meta name="robots" content="noindex" />
   <style>
-    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0b0f0d; color:#e5e5e5; }
+    html { zoom: 1.25; }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #0b0f0d url('../ZarubaBackGround.png') center/cover no-repeat fixed; color:#e5e5e5; }
     .wrap { min-height: 100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px; }
-    .card { max-width:640px; width:100%; background:#1b2320; border:1px solid #FFD70055; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    .stack { width:100%; max-width:640px; display:flex; flex-direction:column; gap:16px; }
+    .banner-card { padding:0; overflow:hidden; background: transparent; }
+    .card { max-width:640px; width:100%; background:rgba(27,35,32,0.72); border:4.5px solid #FFD700; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    .card.banner-card { background: transparent; padding: 0; }
     .title { font-size:24px; margin:0 0 8px; color:#FFD700; }
     .muted { color:#c9c9c9; margin:0 0 16px; }
     .link { display:inline-block; margin-top:12px; color:#FFD700; text-decoration:underline; word-break:break-all; }
@@ -21,32 +25,96 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <h1 class="title">Заходим на первый сервер</h1>
-      <p class="muted"><span class="spinner" aria-hidden="true"></span><span id="status">Ищем актуальную ссылку для подключения...</span></p>
-      <p><a id="direct" class="link" href="#" style="display:none">Открыть в Squad</a></p>
-      <p class="small">Если перенаправление не сработало автоматически, нажмите «Открыть в Squad».</p>
-      <p class="small"><button id="retry" type="button" style="display:none">Повторить попытку</button></p>
+    <div class="stack">
+      <div class="card banner-card">
+        <a href="https://discord.gg/3TvNkJwhB7" target="_blank" rel="noopener">
+          <img src="../HentaiSquad.png" alt="HentaiSquad" style="width:100%;height:100%;object-fit:cover;display:block;margin:0;border:0;box-shadow:none;" />
+        </a>
+      </div>
+      <div class="card">
+        <h1 class="title">Перенаправление на ZARUBA 1</h1>
+        <p class="muted"><span class="spinner" aria-hidden="true"></span><span id="status">Ищем актуальную ссылку для подключения...</span></p>
+        <p><a id="direct" class="link" href="#" style="display:none">Открыть в Steam</a></p>
+        <p class="small">Если перенаправление не сработало автоматически, нажмите «Открыть в Steam».</p>
+        <p class="small"><button id="retry" type="button" style="display:none">Повторить попытку</button></p>
+      </div>
+      <div class="card banner-card">
+        <a href="https://discord.gg/permsqd" target="_blank" rel="noopener">
+          <img src="../permlogo.png" alt="PermSquad" style="width:100%;height:100%;object-fit:cover;display:block;margin:0;border:0;box-shadow:none;" />
+        </a>
+      </div>
     </div>
   </div>
 
   <script>
     (function(){
+      const bannerCard = document.querySelector('.card.banner-card');
+      const bottomCard = document.querySelector('.stack .card:not(.banner-card)');
+      const bannerImg  = bannerCard ? bannerCard.querySelector('img') : null;
+
+      function getNumber(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
+
+      function computeBannerDesiredContentHeight(){
+        if (!bannerCard) return 0;
+        let ratio = 0;
+        if (bannerImg && bannerImg.naturalWidth > 0 && bannerImg.naturalHeight > 0) {
+          ratio = bannerImg.naturalHeight / bannerImg.naturalWidth;
+        }
+        const cs = getComputedStyle(bannerCard);
+        const bl = getNumber(cs.borderLeftWidth), br = getNumber(cs.borderRightWidth);
+        const pl = getNumber(cs.paddingLeft),    pr = getNumber(cs.paddingRight);
+        const contentWidth = Math.max(0, bannerCard.clientWidth - pl - pr);
+        if (ratio > 0 && contentWidth > 0) {
+          return contentWidth * ratio;
+        }
+        return 0;
+      }
+
+      function syncHeights(){
+        if (!bannerCard) return;
+        const desiredContentFromImage = computeBannerDesiredContentHeight();
+        bannerCard.style.height = (desiredContentFromImage > 0 ? desiredContentFromImage : 0) + 'px';
+        if (bottomCard) bottomCard.style.minHeight = '';
+        try {
+          const bcs2 = getComputedStyle(bannerCard);
+          const bbl = getNumber(bcs2.borderLeftWidth), bbr = getNumber(bcs2.borderRightWidth);
+          const bannerContent = (bannerImg && bannerImg.clientWidth > 0 ? bannerImg.clientWidth : bannerCard.clientWidth);
+          const targetOuter = Math.max(0, bannerContent + bbl + bbr);
+          if (bottomCard && targetOuter > 0) {
+            const cs = getComputedStyle(bottomCard);
+            const bl = getNumber(cs.borderLeftWidth), br = getNumber(cs.borderRightWidth);
+            const pl = getNumber(cs.paddingLeft),    pr = getNumber(cs.paddingRight);
+            const contentWidth = Math.max(0, targetOuter - bl - br - pl - pr);
+            bottomCard.style.width = contentWidth + 'px';
+            bottomCard.style.marginLeft = 'auto';
+            bottomCard.style.marginRight = 'auto';
+          }
+        } catch (_) { }
+      }
+
+      syncHeights();
+      requestAnimationFrame(syncHeights);
+      window.addEventListener('load', syncHeights);
+      window.addEventListener('resize', syncHeights);
+      if (bannerImg) { if (!bannerImg.complete) bannerImg.addEventListener('load', syncHeights); }
+      if (typeof ResizeObserver !== 'undefined' && bottomCard) {
+        try { const ro = new ResizeObserver(() => syncHeights()); ro.observe(bottomCard); } catch(_) {}
+      }
+      setInterval(syncHeights, 2000);
+
       const statusEl = document.getElementById('status');
       const a = document.getElementById('direct');
       const retryBtn = document.getElementById('retry');
-
       const isValidLink = (s) => typeof s === 'string' && s.startsWith('steam://joinlobby/');
 
-      async function fetchFirstLink(){
+      async function fetchLink(){
         const url = '../links.txt?ts=' + Date.now();
         try {
           const res = await fetch(url, { cache: 'no-store' });
           if (!res.ok) throw new Error('HTTP ' + res.status);
           const text = await res.text();
           const lines = text.split(/\r?\n/).map(s => s.trim());
-          // Take exactly the first line (server 1). If empty or invalid, return empty.
-          const first = (lines[0] || '').trim();
+          const first = (lines[0] || '').trim(); // server 1
           return isValidLink(first) ? first : '';
         } catch (e) {
           console.warn('[S1C] Не удалось загрузить links.txt:', e);
@@ -55,23 +123,16 @@
       }
 
       let attempts = 0;
-      const maxAttempts = 10; // ~10 секунд ожидания
-
+      const maxAttempts = 10;
       async function attempt(){
         attempts++;
         statusEl.textContent = 'Ищем актуальную ссылку для подключения... (попытка ' + attempts + '/' + maxAttempts + ')';
-        const link = await fetchFirstLink();
+        const link = await fetchLink();
         if (link) {
           a.href = link;
           a.style.display = 'inline-block';
-          statusEl.textContent = 'Найдена ссылка. Открываем Squad...';
-          try {
-            // Use replace to avoid adding to history
-            window.location.replace(link);
-          } catch(_) {
-            // Fallback to direct click
-            statusEl.textContent = 'Нажмите «Открыть в Squad», чтобы продолжить.';
-          }
+          statusEl.textContent = 'Найдена ссылка. Открываем Steam...';
+          try { window.location.replace(link); } catch(_) { statusEl.textContent = 'Нажмите «Открыть в Steam», чтобы продолжить.'; }
           return true;
         }
         if (attempts < maxAttempts) {
@@ -91,7 +152,6 @@
         attempt();
       });
 
-      // Kick off
       attempt();
     })();
   </script>

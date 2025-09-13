@@ -1,14 +1,16 @@
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
+dotenv.config({ path: path.join(ROOT, '.env') });
 
 const APP_ID = '393380'; // Squad
-const BM_TOKEN = process.env.BM_TOKEN || process.env.BATTLEMETRICS_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6ImM0Y2VhNDQ2MTMxMDIyMzAiLCJpYXQiOjE3NTU3MzU2NTAsIm5iZiI6MTc1NTczNTY1MCwiaXNzIjoiaHR0cHM6Ly93d3cuYmF0dGxlbWV0cmljcy5jb20iLCJzdWIiOiJ1cm46dXNlcjoxMDU0OTAxIn0.xQKibQ5UmFRKEJ5Y9wX31D48Sa47k70w_NeTfcVimWs';
-const STEAM_API_KEY = process.env.STEAM_API_KEY || process.env.STEAM_KEY || '7B1DCE29B0B4A39D3A5817F8204EB89B';
+const BM_TOKEN = process.env.BM_TOKEN || process.env.BATTLEMETRICS_TOKEN || '';
+const STEAM_API_KEY = process.env.STEAM_API_KEY || process.env.STEAM_KEY || '';
 const _ENV_SAMPLE = Number(process.env.LOBBY_SAMPLE_SIZE || process.env.LINKS_SAMPLE_SIZE);
 const LOBBY_SAMPLE_SIZE = Number.isFinite(_ENV_SAMPLE) ? Math.max(1, Math.min(100, _ENV_SAMPLE)) : 20;
 console.log('[LINKS-CRON] LOBBY_SAMPLE_SIZE =', LOBBY_SAMPLE_SIZE);
@@ -24,15 +26,15 @@ async function readBMIds() {
     text = await readFile(file, 'utf8');
   } catch (e) {
     console.error('[LINKS-CRON] Не удалось прочитать bm-servers.txt:', e.message);
-    return ['', '', '', ''];
+    return ['', '', '', '', ''];
   }
   const rawLines = text.split(/\r?\n/).map(s => (s || '').trim());
   // Drop comments
   let lines = rawLines.filter(s => !s.startsWith('#'));
   // Remove leading blanks
   while (lines.length && lines[0] === '') lines.shift();
-  const sliced = lines.slice(0, 4);
-  while (sliced.length < 4) sliced.push('');
+  const sliced = lines.slice(0, 5);
+  while (sliced.length < 5) sliced.push('');
   console.log('[LINKS-CRON] Parsed BM IDs:', sliced);
   return sliced;
 }

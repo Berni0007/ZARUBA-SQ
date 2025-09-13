@@ -1,13 +1,15 @@
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
+dotenv.config({ path: path.join(ROOT, '.env') });
 
 const MAX_PLAYERS = 100;
-const BM_TOKEN = process.env.BM_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6ImM0Y2VhNDQ2MTMxMDIyMzAiLCJpYXQiOjE3NTU3MzU2NTAsIm5iZiI6MTc1NTczNTY1MCwiaXNzIjoiaHR0cHM6Ly93d3cuYmF0dGxlbWV0cmljcy5jb20iLCJzdWIiOiJ1cm46dXNlcjoxMDU0OTAxIn0.xQKibQ5UmFRKEJ5Y9wX31D48Sa47k70w_NeTfcVimWs';
+const BM_TOKEN = process.env.BM_TOKEN || process.env.BATTLEMETRICS_TOKEN || '';
 
 function clamp(n, min, max) {
   const x = Number(n);
@@ -22,13 +24,13 @@ async function readBMIds() {
     text = await readFile(file, 'utf8');
   } catch (e) {
     console.error('[BM-CRON] Не удалось прочитать bm-servers.txt:', e.message);
-    return ['', '', '', ''];
+    return ['', '', '', '', ''];
   }
   const rawLines = text.split(/\r?\n/).map(s => (s || '').trim());
   let lines = rawLines.filter(s => !s.startsWith('#'));
   while (lines.length && lines[0] === '') lines.shift();
-  const sliced = lines.slice(0, 4);
-  while (sliced.length < 4) sliced.push('');
+  const sliced = lines.slice(0, 5);
+  while (sliced.length < 5) sliced.push('');
   console.log('[BM-CRON] Parsed BM IDs:', sliced);
   return sliced;
 }

@@ -10,22 +10,32 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('join-btn-1'),
     document.getElementById('join-btn-2'),
     document.getElementById('join-btn-3'),
-    document.getElementById('join-btn-4')
+    document.getElementById('join-btn-4'),
+    document.getElementById('join-btn-5')
   ];
 
   const counters = [
     document.getElementById('pc-1'),
     document.getElementById('pc-2'),
     document.getElementById('pc-3'),
-    document.getElementById('pc-4')
+    document.getElementById('pc-4'),
+    document.getElementById('pc-5')
+  ];
+
+  // Display names for servers (used in charts and info). Fifth is renamed.
+  const SERVER_NAMES = [
+    'ZARUBA 1',
+    'ZARUBA 2',
+    'ZARUBA 3',
+    'ZARUBA 4',
+    'RUBAS Vanilla+'
   ];
 
   // Tracks whether each server currently has a valid join link (from links.txt)
-  let linkAvailable = [false, false, false, false];
+  let linkAvailable = new Array(buttons.length).fill(false);
 
   const defaultText = 'Присоединиться';
   const MAX_PLAYERS = 100;
-  const BM_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6ImM0Y2VhNDQ2MTMxMDIyMzAiLCJpYXQiOjE3NTU3MzU2NTAsIm5iZiI6MTc1NTczNTY1MCwiaXNzIjoiaHR0cHM6Ly93d3cuYmF0dGxlbWV0cmljcy5jb20iLCJzdWIiOiJ1cm46dXNlcjoxMDU0OTAxIn0.xQKibQ5UmFRKEJ5Y9wX31D48Sa47k70w_NeTfcVimWs';
   const clamp = (n, min, max) => Math.min(Math.max(Number(n) || 0, min), max);
 
   function setDisabled(btn, disabled) {
@@ -71,8 +81,8 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
       console.log('[BM-DEBUG] links.txt content:', text);
-      const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      console.log('[BM-DEBUG] parsed links:', lines);
+      const lines = text.split(/\r?\n/).map(s => s.trim());
+      console.log('[BM-DEBUG] parsed links (with blanks kept):', lines);
       applyLinks(lines);
     } catch (e) {
       console.error('Не удалось загрузить links.txt:', e);
@@ -130,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ===== NEW: Chart + Info rendering =====
   let playersChart = null;
-  let serverCharts = [null, null, null, null];
+  let serverCharts = new Array(counters.length).fill(null);
   let lastResults = null;
 
   function formatPlayTime(sec) {
@@ -148,10 +158,10 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn('[BM-DEBUG] Chart.js не загружен');
         return;
       }
-      const labels = ['ZARUBA 1', 'ZARUBA 2', 'ZARUBA 3', 'ZARUBA 4'];
+      const labels = Array.from({ length: counters.length }, (_, i) => SERVER_NAMES[i] || `ZARUBA ${i + 1}`);
       const players = [];
       const queue = [];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < counters.length; i++) {
         const entry = results.find(r => Number(r?.idx) === i) || {};
         const p = Number(entry?.players ?? entry?.value);
         const q = Number(entry?.queue);
@@ -215,13 +225,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const box = document.getElementById('serverInfo');
     if (!box) return;
     const items = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < counters.length; i++) {
       const r = results.find(x => Number(x?.idx) === i) || {};
       const map = (r && typeof r.map === 'string' && r.map.trim()) ? r.map.trim() : '—';
       const time = formatPlayTime(r?.playTimeSec);
       const players = Number.isFinite(Number(r?.players ?? r?.value)) ? Number(r?.players ?? r?.value) : null;
       const queue = Number.isFinite(Number(r?.queue)) ? Number(r?.queue) : null;
-      const line1 = `ZARUBA ${i + 1}`;
+      const line1 = SERVER_NAMES[i] || `ZARUBA ${i + 1}`;
       const line2 = `Карта: ${map}`;
       const line3 = `Время: ${time}`;
       const line4 = `Онлайн: ${players != null ? players : '—'}/${MAX_PLAYERS} · Очередь: ${queue != null ? queue : '—'}`;
@@ -244,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
         console.warn('[BM-DEBUG] Chart.js не загружен');
         return;
       }
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < counters.length; i++) {
         const r = results.find(x => Number(x?.idx) === i) || {};
         const p = Number(r?.players ?? r?.value);
         const q = Number(r?.queue);

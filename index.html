@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ZARUBA — ZBA</title>
-  <meta name="description" content="ZARUBA — элитные военные серверы ZBA." />
+  <meta name="description" content="ZARUBA - Великолепные сервера по Squad." />
   <meta name="theme-color" content="#3a4a3f" />
   <link rel="icon" href="favicon.ico" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -28,6 +28,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <style>
+    html { zoom: 1; }
     body::before {
       content: "";
       position: fixed;
@@ -82,7 +83,7 @@
     </header>
 
     <main class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-4 border-gold text-center p-6">
         <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 1</h2>
         <p class="text-neutral-200 mb-4 text-lg">Global Escalation <span id="pc-1" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full border border-gold text-gold text-sm bg-military-dark/70">—/100</span></p>
         <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
@@ -98,7 +99,7 @@
         </div>
       </section>
 
-      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-4 border-gold text-center p-6">
         <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 2</h2>
         <p class="text-neutral-200 mb-4 text-lg">Steel Division <span id="pc-2" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full border border-gold text-gold text-sm bg-military-dark/70">—/100</span></p>
         <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
@@ -114,7 +115,7 @@
         </div>
       </section>
 
-      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-4 border-gold text-center p-6">
         <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 3</h2>
         <p class="text-neutral-200 mb-4 text-lg">Global Escalation <span id="pc-3" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full border border-gold text-gold text-sm bg-military-dark/70">—/100</span></p>
         <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
@@ -130,7 +131,7 @@
         </div>
       </section>
 
-      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-2 border-gold text-center p-6">
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-4 border-gold text-center p-6">
         <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">ZARUBA 4</h2>
         <p class="text-neutral-200 mb-4 text-lg">Global Escalation <span id="pc-4" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full border border-gold text-gold text-sm bg-military-dark/70">—/100</span></p>
         <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
@@ -145,12 +146,28 @@
           <a id="join-btn-4" href="http://212.22.93.230:8080/s4c/" class="text-btn">Присоединиться</a>
         </div>
       </section>
+
+      <section class="rounded-lg bg-military-dark/60 backdrop-blur-md border-4 border-gold text-center p-6">
+        <h2 class="text-4xl md:text-5xl font-tactical gold-gradient mb-4">RUBAS Vanilla+</h2>
+        <p class="text-neutral-200 mb-4 text-lg">Global Escalation <span id="pc-5" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full border border-gold text-gold text-sm bg-military-dark/70">—/100</span></p>
+        <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          <div class="mx-auto w-40 h-40">
+            <canvas id="chart-5" width="160" height="160" aria-label="Диаграмма сервера 5" role="img"></canvas>
+          </div>
+          <div id="info-5" class="text-left text-neutral-200 text-sm">
+            <!-- Заполняется скриптом -->
+          </div>
+        </div>
+        <div class="mt-4">
+          <a id="join-btn-5" href="http://212.22.93.230:8080/s5c/" class="text-btn">Присоединиться</a>
+        </div>
+      </section>
     </main>
 
 
     <footer class="text-center mt-16 pb-8" role="contentinfo">
       <div class="border-t border-gold/30 pt-8">
-        <p class="text-neutral-200/80 text-sm uppercase tracking-widest">by Berni © 2025</p>
+        <p class="text-neutral-200/80 text-sm uppercase tracking-widest">by Berni and Ars145 © 2025</p>
       </div>
     </footer>
   </div>
